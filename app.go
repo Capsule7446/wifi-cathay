@@ -40,36 +40,38 @@ func MenuItemStart(name string, tip string) *systray.MenuItem {
 func Run(start, end, exit chan struct{}) {
 	var ticker *time.Ticker
 	stopFunc := make(chan struct{})
-	for c.IsCathayWIFI() {
-		select {
-		case <-start:
-			log.Println("Start")
-			if ticker == nil {
-				log.Println("Start Success")
-				ticker = time.NewTicker(time.Second * time.Duration(c.ConfigData.Time))
-				go func(ticker *time.Ticker, stopFunc <-chan struct{}) {
-					for ticker != nil {
-						select {
-						case <-ticker.C:
-							log.Println("Ticker Run")
-							go c.Login()
+	for {
+		if c.IsCathayWIFI() {
+			select {
+			case <-start:
+				log.Println("Start")
+				if ticker == nil {
+					log.Println("Start Success")
+					ticker = time.NewTicker(time.Second * time.Duration(c.ConfigData.Time))
+					go func(ticker *time.Ticker, stopFunc <-chan struct{}) {
+						for ticker != nil {
+							select {
+							case <-ticker.C:
+								log.Println("Ticker Run")
+								go c.Login()
+							}
 						}
-					}
-				}(ticker, stopFunc)
+					}(ticker, stopFunc)
+				}
+			case <-end:
+				if ticker != nil {
+					ticker.Stop()
+					ticker = nil
+				}
+				log.Println("End")
+			case <-exit:
+				if ticker != nil {
+					ticker.Stop()
+					ticker = nil
+				}
+				systray.Quit()
+				log.Println("Exit")
 			}
-		case <-end:
-			if ticker != nil {
-				ticker.Stop()
-				ticker = nil
-			}
-			log.Println("End")
-		case <-exit:
-			if ticker != nil {
-				ticker.Stop()
-				ticker = nil
-			}
-			systray.Quit()
-			log.Println("Exit")
 		}
 	}
 }
