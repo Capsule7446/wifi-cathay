@@ -39,16 +39,23 @@ func MenuItemStart(name string, tip string) *systray.MenuItem {
 
 func Run(start, end, exit chan struct{}) {
 	var ticker *time.Ticker
-	stopFunc := make(chan struct{})
+	stopFunc := func(ticker *time.Ticker) {
+		if ticker != nil {
+			ticker.Stop()
+			ticker = nil
+			systray.SetIcon(c.Image("bank", embedFiles))
+		}
+	}
 	for {
 		if c.IsCathayWIFI() {
 			select {
 			case <-start:
 				log.Println("Start")
 				if ticker == nil {
+					systray.SetIcon(c.Image("bankIsRun", embedFiles))
 					log.Println("Start Success")
 					ticker = time.NewTicker(time.Second * time.Duration(c.ConfigData.Time))
-					go func(ticker *time.Ticker, stopFunc <-chan struct{}) {
+					go func(ticker *time.Ticker) {
 						for ticker != nil {
 							select {
 							case <-ticker.C:
@@ -56,19 +63,13 @@ func Run(start, end, exit chan struct{}) {
 								go c.Login()
 							}
 						}
-					}(ticker, stopFunc)
+					}(ticker)
 				}
 			case <-end:
-				if ticker != nil {
-					ticker.Stop()
-					ticker = nil
-				}
+				stopFunc(ticker)
 				log.Println("End")
 			case <-exit:
-				if ticker != nil {
-					ticker.Stop()
-					ticker = nil
-				}
+				stopFunc(ticker)
 				systray.Quit()
 				log.Println("Exit")
 			}
