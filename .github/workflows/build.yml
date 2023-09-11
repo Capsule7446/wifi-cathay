@@ -23,8 +23,6 @@ jobs:
     - name: Build for Windows
       run: GOOS=windows GOARCH=amd64 go build -o myapp-windows-amd64.exe
 
-    - name: Build for macOS
-      run: GOOS=darwin GOARCH=amd64 go build -o myapp-darwin-amd64
 
     - name: Create release
       id: create_release
@@ -32,14 +30,7 @@ jobs:
         echo "::set-output name=release::$(date +'%Y-%m-%d')-$(git rev-parse --short HEAD)"
         echo "::set-output name=upload_url::$(curl -s -X POST -H 'Authorization: token ${{ secrets.token }}' -d '{}' https://api.github.com/repos/${{ github.repository }}/releases | jq -r '.upload_url')"
 
-    - name: Upload Linux binary
-      run: |
-        curl --data-binary "@myapp-linux-amd64" -H "Content-Type: application/octet-stream" -H "Authorization: token ${{ secrets.token }}" "${{ steps.create_release.outputs.upload_url }}?name=myapp-linux-amd64"
 
     - name: Upload Windows binary
       run: |
         curl --data-binary "@myapp-windows-amd64.exe" -H "Content-Type: application/octet-stream" -H "Authorization: token ${{ secrets.token }}" "${{ steps.create_release.outputs.upload_url }}?name=myapp-windows-amd64.exe"
-
-    - name: Upload macOS binary
-      run: |
-        curl --data-binary "@myapp-darwin-amd64" -H "Content-Type: application/octet-stream" -H "Authorization: token ${{ secrets.token }}" "${{ steps.create_release.outputs.upload_url }}?name=myapp-darwin-amd64"
