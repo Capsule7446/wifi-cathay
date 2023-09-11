@@ -3,8 +3,8 @@ package modules
 import (
 	"embed"
 	"fmt"
-	"github.com/go-ping/ping"
 	"log"
+	"net/http"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -52,18 +52,11 @@ func Image(name string, embed embed.FS) []byte {
 }
 
 func Ping(Timeout time.Duration) bool {
-	target := "www.google.com"
-
-	pinger, err := ping.NewPinger(target)
+	http.DefaultClient.Timeout = Timeout
+	_, err := http.Head("https://www.google.com/")
 	if err != nil {
 		return false
+	} else {
+		return true
 	}
-	pinger.SetPrivileged(true)
-	pinger.Count = 1
-	pinger.Timeout = Timeout
-	if pinger.Run() != nil {
-		log.Printf("ping 发生错误: %v\n", err)
-		return false
-	}
-	return true
 }

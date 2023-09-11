@@ -16,8 +16,8 @@ func init() {
 }
 
 func Login() {
-	log.Println(ConfigData.Url)
 	if !Ping(2 * time.Second) {
+		log.Println(ConfigData.Url)
 		client.Post(ConfigData.Url, "application/json", strings.NewReader(""))
 	}
 }
