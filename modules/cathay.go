@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -15,5 +16,8 @@ func init() {
 }
 
 func Login() {
-	client.Post(ConfigData.Url, "application/json", strings.NewReader(""))
+	log.Println(ConfigData.Url)
+	if !Ping(2 * time.Second) {
+		client.Post(ConfigData.Url, "application/json", strings.NewReader(""))
+	}
 }

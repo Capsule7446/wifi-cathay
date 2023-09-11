@@ -3,10 +3,12 @@ package modules
 import (
 	"embed"
 	"fmt"
+	"github.com/go-ping/ping"
 	"log"
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 var WifiCommand *exec.Cmd
@@ -47,4 +49,21 @@ func Image(name string, embed embed.FS) []byte {
 		return []byte{}
 	}
 	return fileContents
+}
+
+func Ping(Timeout time.Duration) bool {
+	target := "www.google.com"
+
+	pinger, err := ping.NewPinger(target)
+	if err != nil {
+		return false
+	}
+	pinger.SetPrivileged(true)
+	pinger.Count = 1
+	pinger.Timeout = Timeout
+	if pinger.Run() != nil {
+		log.Printf("ping 发生错误: %v\n", err)
+		return false
+	}
+	return true
 }
