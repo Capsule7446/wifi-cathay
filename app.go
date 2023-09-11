@@ -13,6 +13,7 @@ import (
 var embedFiles embed.FS
 
 func main() {
+	os.Create("LoginLog.txt")
 	// Read Config
 	config, err := os.ReadFile("config.yml")
 	if err != nil {
@@ -30,6 +31,8 @@ func onReady() {
 	stop := MenuItemStart("stop", "关闭定时发送")
 	exit := MenuItemStart("exit", "结束程式")
 	go Run(start.ClickedCh, stop.ClickedCh, exit.ClickedCh)
+	// 启动时自动启动
+	start.ClickedCh <- struct{}{}
 }
 func MenuItemStart(name string, tip string) *systray.MenuItem {
 	start := systray.AddMenuItem(name, tip)
@@ -39,12 +42,13 @@ func MenuItemStart(name string, tip string) *systray.MenuItem {
 
 func Run(start, end, exit chan struct{}) {
 	var ticker *time.Ticker
-	stopFunc := func(ticker *time.Ticker) {
+	stopFunc := func(ticker *time.Ticker) *time.Ticker {
 		if ticker != nil {
 			ticker.Stop()
 			ticker = nil
 			systray.SetIcon(c.Image("bank", embedFiles))
 		}
+		return ticker
 	}
 	for {
 		if c.IsCathayWIFI() {
@@ -66,10 +70,10 @@ func Run(start, end, exit chan struct{}) {
 					}(ticker)
 				}
 			case <-end:
-				stopFunc(ticker)
+				ticker = stopFunc(ticker)
 				log.Println("End")
 			case <-exit:
-				stopFunc(ticker)
+				ticker = stopFunc(ticker)
 				systray.Quit()
 				log.Println("Exit")
 			}

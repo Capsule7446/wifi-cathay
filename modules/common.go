@@ -54,9 +54,5 @@ func Image(name string, embed embed.FS) []byte {
 func Ping(Timeout time.Duration) bool {
 	http.DefaultClient.Timeout = Timeout
 	_, err := http.Head("https://www.google.com/")
-	if err != nil {
-		return false
-	} else {
-		return true
-	}
+	return !(err != nil)
 }
